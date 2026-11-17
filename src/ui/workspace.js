@@ -137,6 +137,7 @@ export function initWorkspace() {
       }
     },
   });
+  window.__voxWf = wf; // test hook used by tests/e2e/t_visual.mjs (read-only use)
   wf.setFollow(true);
 
   tid('add-clip-btn').addEventListener('click', addSelectionAsClip);
