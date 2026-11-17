@@ -1,0 +1,34 @@
+node_modules/
+dist/
+public/ort/
+.netlify/
+tests/out/
+tests/audio/long*.wav
+*.log
+
+# site login, never commit
+*.local.txt
+*.local
+.claude/
+tests/audio/toolong.wav
+tests/tmp/
+public/data/rhymes.json
+
+# local-only settings (the owner's LOCAL PRO switch), never commit
+.env.local
+.env.*.local
+
+# Local secrets and private notes: never commit
+.env
+.env.*
+!.env.example
+_private/
+
+# Never commit these
+SITE-PASSWORD*
+tests/out/
+.env
+.env.*
+!.env.example
+_private/
+node_modules/

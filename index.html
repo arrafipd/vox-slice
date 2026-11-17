@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0B0B14">
+  <meta name="description" content="Vox-Slice: drop in speech, pick the words you want, export them as clips. Runs in your browser. Nothing is uploaded. A Fire-Press tool.">
+  <title>Vox-Slice</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+  <!-- shared icon shapes -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-loop" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-retry" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></symbol>
+      <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5M11 8.5v5M8.5 11h5"/></symbol>
+      <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5M8.5 11h5"/></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/></symbol>
+      <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5M9 7h6"/></symbol>
+      <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12v0M7 8v8M11 4v16M15 8v8M19 10v4M21 12v0"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 1c.7 6.3 3.7 9.3 11 11-7.3 1.7-10.3 4.7-11 11-.7-6.3-3.7-9.3-11-11 7.300-1.700 10.300-4.700 11-11z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+      <!-- graffiti splat, used with currentColor -->
+      <symbol id="splat" viewBox="0 0 200 200">
+        <path fill="currentColor" d="M100 14c10 0 14 22 24 26 10 4 34-8 40 2s-14 26-12 38c2 12 28 20 22 32s-30 4-38 14-2 34-14 38-22-18-34-20-30 14-40 6 2-30-4-42-30-12-28-26 24-12 30-22-8-32 2-40 28 6 38 0 18-26 34-26z"/>
+        <circle fill="currentColor" cx="28" cy="40" r="7"/><circle fill="currentColor" cx="176" cy="150" r="9"/><circle fill="currentColor" cx="168" cy="26" r="4"/><circle fill="currentColor" cx="22" cy="158" r="5"/>
+        <path fill="currentColor" d="M96 150h12v34a6 6 0 0 1-12 0z"/><path fill="currentColor" d="M130 140h9v22a4.500 4.500 0 0 1-9 0z"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <aside class="side" aria-label="Vox-Slice navigation">
+      <div class="fp">
+        <span class="fp-mark" aria-hidden="true">FP</span>
+        <span class="fp-name">FIRE PRESS<small>Creator tools</small></span>
+      </div>
+      <nav class="tools" role="tablist" aria-label="Tools">
+        <button type="button" role="tab" class="tab on" id="tab-slice" data-testid="tab-slice" aria-selected="true" aria-controls="view-slice">
+          <svg class="ico" aria-hidden="true"><use href="#i-scissors"/></svg><span>Slice</span>
+        </button>
+        <button type="button" role="tab" class="tab" id="tab-builder" data-testid="tab-builder" aria-selected="false" aria-controls="view-builder" tabindex="-1">
+          <svg class="ico" aria-hidden="true"><use href="#i-wave"/></svg><span>Builder</span>
+        </button>
+        <button type="button" class="tab howto-tab" data-howto-toggle aria-expanded="true" aria-controls="howto-body">
+          <svg class="ico" aria-hidden="true"><use href="#i-book"/></svg><span>How to</span>
+        </button>
+      </nav>
+      <p class="side-note">Your audio never leaves this computer.</p>
+    </aside>
+
+    <div class="content">
+      <header class="top">
+        <h1 class="wordmark" aria-label="Vox-Slice">
+          <span class="vox" aria-hidden="true">VOX-</span><span class="slice" aria-hidden="true">SLICE</span>
+          <svg class="wm-spark" aria-hidden="true"><use href="#i-spark"/></svg>
+        </h1>
+        <p class="tagline">Chop the speech. Keep the fire.</p>
+        <span class="fp-tag">A Fire-Press tool</span>
+        <a class="tier-tag" data-tier-ui data-testid="tier-tag" data-upgrade-link href="/pricing" title="See what Pro adds"><span data-tier-summary>Free: files up to 20 s</span></a>
+      </header>
+
+      <div id="desktop-notice" class="notice" role="note" hidden>
+        <span>Vox-Slice works best on desktop Chrome. Other browsers and phones can be slower or missing a few tricks.</span>
+        <button type="button" class="mini" aria-label="Dismiss this notice">Got it</button>
+      </div>
+
+      <div class="notice bad" data-testid="error-banner" role="alert" hidden>
+        <ul class="err-list"></ul>
+        <button type="button" class="mini err-close" aria-label="Dismiss errors">Dismiss</button>
+      </div>
+
+      <div class="notice upsell" data-tier-ui data-testid="tier-banner" role="alert" hidden>
+        <p class="upsell-msg"></p>
+        <div class="upsell-acts">
+          <a class="go-pro" data-testid="go-pro-btn" data-upgrade-link href="/pricing">Go Pro</a>
+          <button type="button" class="mini upsell-close" aria-label="Dismiss this message">Not now</button>
+        </div>
+      </div>
+
+
+      <main>
+        <!-- ============================ SLICE ============================ -->
+        <div id="view-slice" role="tabpanel" aria-labelledby="tab-slice">
+          <div class="drop" data-testid="drop-zone" role="button" tabindex="0" aria-label="Drop speech audio here, or press Enter to choose files">
+            <svg class="splat s1" aria-hidden="true"><use href="#splat"/></svg>
+            <svg class="splat s2" aria-hidden="true"><use href="#splat"/></svg>
+            <svg class="splat s3" aria-hidden="true"><use href="#splat"/></svg>
+            <div class="drop-inner">
+              <div class="bars" aria-hidden="true"><span class="slash"></span></div>
+              <p class="drop-title">Drop the speech</p>
+              <p class="drop-sub"><span class="only-big">Drop MP3, WAV or M4A files here, or click to browse. Several at once is fine, up to <span data-tier-limit>20 seconds</span> each.</span><span class="only-compact">Add more speech: drop files here or click to browse.</span></p>
+              <ul class="drop-facts">
+                <li>First run downloads a speech model (about 75 MB) once. After that it is cached and works instantly.</li>
+                <li>Nothing is uploaded. It all happens in this tab.</li>
+              </ul>
+              <label class="model-pick">
+                <span>Speech model</span>
+                <select data-testid="model-select" aria-label="Speech model">
+                  <option value="Xenova/whisper-tiny.en">Tiny: fastest, about 40 MB</option>
+                  <option value="Xenova/whisper-base.en" selected>Base: balanced, about 75 MB (default)</option>
+                  <option value="Xenova/whisper-small.en">Small: most accurate, about 250 MB, slow</option>
+                </select>
+              </label>
+            </div>
+            <input type="file" data-testid="file-input" multiple accept="audio/*,video/mp4,.mp3,.wav,.m4a,.mp4,.aac,.ogg,.flac,.webm" aria-label="Choose speech audio files" hidden>
+          </div>
+
+          <p class="status" data-testid="status" role="status" aria-live="polite"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg><span id="status-text">Ready when you are. Drop a speech to start.</span></p>
+
+          <div class="panel progress" data-testid="progress" hidden>
+            <div class="progress-row">
+              <svg class="busy-spark" aria-hidden="true"><use href="#i-spark"/></svg>
+              <div class="progress-body">
+                <p class="prog-label"></p>
+                <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Progress"><div></div></div>
+                <p class="prog-detail num"></p>
+              </div>
+              <button type="button" class="danger" data-testid="cancel-btn">Cancel</button>
+            </div>
+          </div>
+
+          <section id="library" class="library" aria-label="Library" hidden>
+            <div class="lib-head">
+              <h2>Library <span class="pill num" id="library-count">0</span></h2>
+              <div class="row lib-tools">
+                <button type="button" class="mini" data-testid="dl-all-transcripts-btn" title="One text file with every transcript, each under its file name" hidden><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Download all transcripts</span></button>
+                <button type="button" class="mini" data-testid="dl-prompt-btn" title="Save ai-prompt.txt: a ready-to-paste prompt followed by the full transcript" disabled><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Download AI prompt</span></button>
+                <button type="button" class="mini" data-testid="copy-prompt-btn" title="Copy the prompt and the full transcript, ready to paste into an AI chat" disabled><svg class="ico" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy AI prompt</span></button>
+                <button type="button" id="add-more-btn" class="mini"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Add speech</span></button>
+              </div>
+            </div>
+            <ul class="lib-list" data-testid="library-list"></ul>
+          </section>
+
+          <div id="workspace" class="workspace">
+            <div class="col-main">
+              <section class="panel transcript-panel" aria-label="Transcript and search">
+                <div class="search-row">
+                  <label class="search" for="search-input">
+                    <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+                    <input id="search-input" data-testid="search-input" type="text" aria-label="Search every speech" placeholder="Search every speech" autocomplete="off" spellcheck="false">
+                    <kbd class="slash-hint" aria-hidden="true">/</kbd>
+                  </label>
+                  <span class="match-count num" data-testid="match-count" aria-live="polite"></span>
+                  <button type="button" data-testid="add-matches-btn" class="act" disabled><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Add all matches as clips</span></button>
+                </div>
+                <ul class="results" id="search-results" hidden></ul>
+
+                <div class="tbar">
+                  <button type="button" class="primary" data-testid="add-clip-btn" disabled title="Add selection as clip (Enter)"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Add clip</span></button>
+                  <button type="button" data-testid="play-sel-btn" disabled title="Play or stop (Space)"><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span>Play selection</span></button>
+                  <button type="button" id="stop-btn" class="icon-only" title="Stop playback (Esc)" aria-label="Stop playback"><svg class="ico" aria-hidden="true"><use href="#i-stop"/></svg></button>
+                  <span class="spacer"></span>
+                  <button type="button" id="sel-shrink-btn" class="nudge" title="Shrink selection by a word (Left arrow)" aria-label="Shrink selection by a word" disabled>&minus;</button>
+                  <button type="button" id="sel-extend-btn" class="nudge" title="Extend selection by a word (Right arrow)" aria-label="Extend selection by a word" disabled>+</button>
+                  <button type="button" id="find-rhymes-btn" class="act" disabled title="Find rhymes for the selected word"><span>Find rhymes</span></button>
+                  <button type="button" id="clear-sel-btn" class="act" title="Clear selection (Esc)"><span>Clear</span></button>
+                </div>
+                <p class="hint sel-info" id="sel-info">Click or drag across words. Double-click a word to hear it.</p>
+                <div class="transcript" data-testid="transcript"></div>
+              </section>
+
+              <section class="panel wave-panel" aria-label="Waveform">
+                <div class="wave-head">
+                  <h2>Waveform</h2>
+                  <span class="legend"><i class="sw cyan"></i>speech <i class="sw pink"></i>selection or clip <i class="sw purple"></i>other clips</span>
+                  <span class="spacer"></span>
+                  <button type="button" id="zoom-out-btn" class="icon-only mini" title="Zoom out" aria-label="Zoom out"><svg class="ico" aria-hidden="true"><use href="#i-zoom-out"/></svg></button>
+                  <button type="button" id="zoom-in-btn" class="icon-only mini" title="Zoom in (or scroll the wheel over the waveform)" aria-label="Zoom in"><svg class="ico" aria-hidden="true"><use href="#i-zoom-in"/></svg></button>
+                  <button type="button" id="zoom-sel-btn" class="mini" title="Zoom to the selection or clip"><span>Zoom to clip</span></button>
+                  <button type="button" id="zoom-fit-btn" class="mini" title="Show the whole file"><svg class="ico" aria-hidden="true"><use href="#i-fit"/></svg><span>Fit</span></button>
+                </div>
+                <div class="wave" data-testid="waveform">
+                  <p class="wave-empty" id="wave-empty">The waveform shows up here once a speech is loaded.</p>
+                </div>
+                <p class="hint">Scroll to zoom, shift+scroll or drag to pan, click to play from a point. Drag the pink handles to fix clipped syllables.</p>
+              </section>
+
+              <section class="panel phrase-panel" id="phrase-panel" aria-label="Import phrases">
+                <div class="panel-head">
+                  <h2>Import phrases</h2>
+                  <span class="chip">AI Rap Pack</span>
+                </div>
+                <p class="hint">Paste the AI&rsquo;s reply here, or drop a .txt file on this panel. If it has a <b>### PHRASES</b> line, only the lines under it are used. Otherwise every line counts as one phrase.</p>
+                <textarea data-testid="phrase-input" rows="5" spellcheck="false" aria-label="Phrase list" placeholder="Paste the whole AI reply, or one phrase per line, for example:&#10;### PHRASES&#10;we've got the underground&#10;believe me"></textarea>
+                <div class="row phrase-bar">
+                  <button type="button" class="primary" data-testid="phrase-match-btn" title="Look for every phrase in every loaded speech (Ctrl+Enter)"><svg class="ico" aria-hidden="true"><use href="#i-search"/></svg><span>Find phrases</span></button>
+                  <label class="btn-like"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span>Load .txt file</span><input type="file" data-testid="phrase-file-input" accept=".txt,.md,text/plain" aria-label="Choose a phrase list text file"></label>
+                  <span class="match-count num" data-testid="phrase-summary" aria-live="polite"></span>
+                </div>
+                <div class="row phrase-bar">
+                  <button type="button" class="act" data-testid="phrase-check-exact-btn" disabled><span>Check all exact matches</span></button>
+                  <button type="button" class="act" data-testid="phrase-uncheck-btn" disabled><span>Uncheck all</span></button>
+                  <span class="spacer"></span>
+                  <button type="button" class="primary" data-testid="phrase-add-btn" disabled><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Add checked to Clips Rack</span></button>
+                </div>
+                <ul class="phrases" data-testid="phrase-results"></ul>
+                <p class="hint phrase-empty" id="phrase-empty">Nothing imported yet. Each phrase will show every place it was found, with a checkbox and a preview button. Phrases the AI made up stay listed in red.</p>
+              </section>
+
+              <div id="rhyme-slot-slice">
+                <section class="panel rhyme-panel" id="rhyme-panel" aria-label="Rhyme finder">
+                  <h2>Rhyme finder</h2>
+                  <label class="search compact" for="rhyme-input">
+                    <svg class="ico" aria-hidden="true"><use href="#i-wave"/></svg>
+                    <input id="rhyme-input" data-testid="rhyme-input" type="text" aria-label="Word to find rhymes for" placeholder="Type a word to find rhymes" autocomplete="off" spellcheck="false">
+                  </label>
+                  <div class="rhyme-results" data-testid="rhyme-results" aria-live="polite"></div>
+                </section>
+              </div>
+            </div>
+
+            <div class="col-side">
+              <section class="panel clips-panel" aria-label="Clips rack">
+                <div class="panel-head">
+                  <h2>Clips rack <span class="pill num" data-clip-count>0</span></h2>
+                  <button type="button" id="clear-clips-btn" class="mini" disabled><span>Clear all</span></button>
+                </div>
+                <div class="ctl">
+                  <label for="pad-input"><span>Padding on new clips</span><output id="pad-out" class="num">60 ms</output></label>
+                  <input id="pad-input" data-testid="pad-input" class="fader" type="range" min="0" max="300" step="5" value="60">
+                  <div class="ctl-foot"><span class="hint">Breathing room added around each word.</span><button type="button" id="reapply-pad-btn" class="mini" disabled title="Reset every clip's edges to the words plus the padding above"><svg class="ico" aria-hidden="true"><use href="#i-retry"/></svg><span>Re-apply to all</span></button></div>
+                </div>
+                <div id="clips-empty" class="clips-empty">
+                  <svg class="ico big" aria-hidden="true"><use href="#i-scissors"/></svg>
+                  <p><b>The rack is empty.</b><br>Click a few words, hit Enter, and watch it fill.</p>
+                </div>
+                <span data-testid="clip-count-label" class="sr-only" aria-live="polite"></span>
+                <div class="clips" data-testid="clips-list"></div>
+              </section>
+
+              <section class="panel export-panel" aria-label="Export">
+                <h2>Export</h2>
+                <fieldset class="fmt">
+                  <legend>Formats</legend>
+                  <label class="check"><input type="checkbox" data-testid="fmt-wav" checked><span>WAV <small>lossless</small></span></label>
+                  <label class="check"><input type="checkbox" data-testid="fmt-mp3"><span>MP3 <small>smaller</small></span></label>
+                </fieldset>
+                <label class="check block"><input type="checkbox" data-testid="opt-normalize"><span>Even out loudness<small class="inline">Brings every clip to a similar level.</small></span></label>
+                <label class="check block"><input type="checkbox" data-testid="opt-trim"><span>Trim silence at the edges<small class="inline">Cuts dead air from the start and end of each clip.</small></span></label>
+                <label class="check block"><input type="checkbox" data-testid="opt-phrase-names"><span>Name files from the phrase<small class="inline">Like 01_we've-got-the-underground.wav, instead of the usual number, text and source name.</small></span></label>
+                <div class="pack-name">
+                  <label for="pack-name-input">ZIP name</label>
+                  <input id="pack-name-input" data-testid="pack-name-input" type="text" maxlength="80" placeholder="Leave blank for an automatic name" autocomplete="off" spellcheck="false">
+                  <p class="hint" id="pack-name-hint"></p>
+                </div>
+                <button type="button" class="primary big" data-testid="export-zip-btn" disabled><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Download all as ZIP</span></button>
+                <p class="hint" id="export-hint"></p>
+                <div class="export-progress" id="export-progress" hidden>
+                  <div class="bar"><div></div></div>
+                  <p class="prog-detail num"></p>
+                </div>
+                <div class="export-result" id="export-result" role="status"></div>
+              </section>
+
+              <section class="panel project-panel" aria-label="Project">
+                <h2>Project</h2>
+                <p class="hint">Save your transcripts and clips to pick up later. Audio is not stored in the file.</p>
+                <div class="row">
+                  <button type="button" data-testid="save-project-btn"><svg class="ico" aria-hidden="true"><use href="#i-save"/></svg><span>Save project</span></button>
+                  <label class="btn-like"><svg class="ico" aria-hidden="true"><use href="#i-folder"/></svg><span>Load project</span><input type="file" data-testid="load-project-input" accept=".json,application/json"></label>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- =========================== BUILDER =========================== -->
+        <div id="view-builder" role="tabpanel" aria-labelledby="tab-builder" hidden>
+          <section class="panel builder-panel hero-panel" aria-label="Sentence builder">
+            <div class="panel-head"><h2>Sentence builder</h2></div>
+            <p class="hint">Type or paste lyric lines, one per row. Vox-Slice finds each word in your speeches and lines the takes up. A whole verse can go in at once.</p>
+            <textarea data-testid="builder-input" rows="6" spellcheck="false" aria-label="Lyric lines" placeholder="One line per row, for example:&#10;we are going to build a tremendous wall&#10;nobody builds walls better than me&#10;&#10;Paste a whole verse if you like."></textarea>
+            <div class="builder-bar">
+              <button type="button" class="primary big" data-testid="builder-run-btn"><svg class="ico" aria-hidden="true"><use href="#i-bolt"/></svg><span>Build it</span></button>
+              <div class="bopts">
+                <label class="ctl-inline" for="gap-input"><span>Gap between words</span><output id="gap-out" class="num">60 ms</output></label>
+                <input id="gap-input" class="fader" type="range" min="0" max="500" step="5" value="60">
+              </div>
+              <label class="check"><input type="checkbox" id="builder-trim"><span>Trim take edges</span></label>
+              <label class="check"><input type="checkbox" id="builder-norm"><span>Even out loudness</span></label>
+              <label class="model-pick inline"><span>Save as</span>
+                <select id="builder-format" aria-label="Builder export format"><option value="wav">WAV</option><option value="mp3">MP3</option><option value="both">WAV + MP3</option></select>
+              </label>
+            </div>
+          </section>
+
+          <div class="builder-out">
+            <section class="panel" aria-label="Built lines">
+              <div class="panel-head">
+                <h2>Your lines</h2>
+                <div class="row">
+                  <button type="button" data-testid="builder-preview-btn" disabled><svg class="ico" aria-hidden="true"><use href="#i-play"/></svg><span>Preview line</span></button>
+                  <button type="button" id="builder-toclips-btn" disabled><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg><span>Send takes to clips rack</span></button>
+                  <button type="button" class="primary" data-testid="builder-export-btn" disabled><svg class="ico" aria-hidden="true"><use href="#i-down"/></svg><span>Export all lines as ZIP</span></button>
+                </div>
+              </div>
+              <div class="blines" data-testid="builder-lines" aria-live="polite"></div>
+              <div class="builder-empty hint" id="builder-empty">Nothing built yet. Write a line above and hit Build it. Words you have not got in your library show up as magenta &ldquo;missing&rdquo; chips.</div>
+            </section>
+            <aside class="side-col">
+              <section class="panel missing-box" data-testid="builder-missing" hidden></section>
+              <div id="rhyme-slot-builder"></div>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      <section class="howto" data-testid="howto" aria-label="How to use Vox-Slice">
+        <div class="howto-head">
+          <h2>How to use it</h2>
+          <button type="button" class="mini" data-howto-toggle aria-expanded="true" aria-controls="howto-body"><svg class="ico" aria-hidden="true"><use href="#i-chev"/></svg><span class="when-open">Hide</span><span class="when-closed">Show</span></button>
+        </div>
+        <div class="howto-body" id="howto-body">
+          <ol class="steps">
+            <li><b>Drop in a speech.</b> MP3, WAV or M4A, up to <span data-tier-limit>20 seconds</span> each. Several files at once is fine.</li>
+            <li><b>Wait for the words.</b> They appear as they are found. The first run downloads a speech model once (about 75 MB), then it is cached and instant.</li>
+            <li><b>Pick words.</b> Click, or drag across a run. Shift+click extends. Double-click a word to hear it. Press Enter to make it a clip.</li>
+            <li><b>Fix the edges.</b> Drag the pink handles on the waveform, or nudge with the buttons. Loop it to hear the change as you go.</li>
+            <li><b>Export.</b> Download everything as a ZIP of WAV and MP3 files with a manifest.csv. Or head to Builder, type a lyric and let it stitch the takes together.</li>
+          </ol>
+          <div class="keys-wrap">
+            <h3>Keyboard shortcuts</h3>
+            <table class="keys">
+              <tbody>
+                <tr><th scope="row"><kbd>Space</kbd></th><td>Play or stop the selection or selected clip</td></tr>
+                <tr><th scope="row"><kbd>Enter</kbd></th><td>Add selection as a clip</td></tr>
+                <tr><th scope="row"><kbd>L</kbd></th><td>Loop the selected clip</td></tr>
+                <tr><th scope="row"><kbd>&larr;</kbd> <kbd>&rarr;</kbd></th><td>Shrink or extend the selection end by a word (<kbd>Shift</kbd> moves the start)</td></tr>
+                <tr><th scope="row"><kbd>[</kbd> <kbd>]</kbd></th><td>Nudge clip start earlier or later by 10 ms</td></tr>
+                <tr><th scope="row"><kbd>;</kbd> <kbd>'</kbd></th><td>Nudge clip end earlier or later by 10 ms</td></tr>
+                <tr><th scope="row"><kbd>Delete</kbd></th><td>Remove the selected clip</td></tr>
+                <tr><th scope="row"><kbd>/</kbd></th><td>Jump to search</td></tr>
+                <tr><th scope="row"><kbd>Esc</kbd></th><td>Stop playback, then clear the selection</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="about roundtrip">
+            <h3>AI Rap Pack: the round trip</h3>
+            <ol class="steps">
+              <li><b>Get the words out.</b> Once a speech is transcribed, press <b>Copy AI prompt</b> in the Library (or <b>Download AI prompt</b> for ai-prompt.txt). It holds a ready-made prompt plus the full transcript. <b>Download transcript</b> saves just the plain text.</li>
+              <li><b>Ask an AI.</b> Paste the prompt into any AI chat. It writes a funny rap, then a <b>### PHRASES</b> list of the exact phrases it used, one per line.</li>
+              <li><b>Bring the phrases back.</b> Paste the whole reply into <b>Import phrases</b> (or drop a .txt file on it) and press <b>Find phrases</b>. Each phrase shows every place it was said. <b>Exact</b> means word for word, <b>close match</b> means about one word off, and red <b>not found</b> means the AI made it up.</li>
+              <li><b>Pick your takes.</b> Preview with the play buttons, tick the ones you want (or <b>Check all exact matches</b>), then <b>Add checked to Clips Rack</b>. They land with the current padding, ready to fine-tune like any other clip.</li>
+              <li><b>Download the sample pack.</b> In Export, tick <b>Name files from the phrase</b>, type a ZIP name if you like, and press <b>Download all as ZIP</b>.</li>
+            </ol>
+            <p class="hint">Vox-Slice never sends anything anywhere. The transcript text only leaves this computer when you paste it into an AI yourself, and your audio never does.</p>
+          </div>
+          <div class="about tier-note" data-tier-ui data-testid="howto-tier">
+            <h3>Free and Pro</h3>
+            <p>You are on <b data-tier-summary>Free: files up to 20 s</b>. The length is measured from the audio itself, not the file size. A longer file is never cut short: Vox-Slice turns it away and tells you why, so trim it and drop it in again. Pro lifts the limit to 15 minutes per file. <a data-upgrade-link href="/pricing">See Pro</a>.</p>
+          </div>
+          <div class="about">
+            <h3>About Vox-Slice</h3>
+            <p>Vox-Slice is a Fire-Press tool for chopping speech into word-sized samples, the first step towards a funny parody rap or any remix. It transcribes right in your browser, so your audio and transcripts stay on your device. Nothing is hosted, nothing is uploaded, and there is no account to make.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="foot">
+        <p class="foot-note"><b>Word timings are close, not perfect.</b> Use padding and the edge handles to fix clipped syllables. <b>Labelling a remix as parody keeps everybody out of trouble.</b></p>
+        <p class="foot-privacy">Everything runs in your browser. Nothing is uploaded.</p>
+        <p class="foot-family">Free and open source. <a data-testid="bug-link" href="https://github.com/robbiefromramona-press/vox-slice/issues/new/choose" target="_blank" rel="noopener noreferrer">Report a bug / Suggest a feature</a> · <a href="https://github.com/robbiefromramona-press/vox-slice" target="_blank" rel="noopener noreferrer">View the code</a></p>
+        <p class="foot-family">Part of the Any-Press family</p>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
